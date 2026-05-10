@@ -90,14 +90,12 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased h-screen overflow-hidden flex flex-col font-sans relative">
 
-    <!-- Background Decorative Elements for Dashboard (NEW UPDATED VERSION) -->
+    <!-- Background Decorative Elements for Dashboard -->
     <div class="fixed inset-0 z-0 pointer-events-none hidden overflow-hidden bg-slate-50" id="dash-bg">
-        <!-- Animated Gradient Blobs (Gold & Cyan Mix) -->
         <div class="absolute -top-[10%] -right-[5%] w-[40vw] h-[40vw] max-w-xl max-h-xl bg-gradient-to-br from-exotGold via-yellow-200 to-exotCyan rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-blob"></div>
         <div class="absolute top-[30%] -left-[10%] w-[35vw] h-[35vw] max-w-lg max-h-lg bg-gradient-to-tr from-exotCyan via-blue-300 to-exotBlue rounded-full mix-blend-multiply filter blur-[100px] opacity-20 animate-blob animation-delay-2000"></div>
         <div class="absolute -bottom-[15%] right-[15%] w-[45vw] h-[45vw] max-w-2xl max-h-2xl bg-gradient-to-tl from-exotGold via-amber-200 to-exotCyan rounded-full mix-blend-multiply filter blur-[120px] opacity-25 animate-blob animation-delay-4000"></div>
 
-        <!-- Elegant SVG Strokes & Curves -->
         <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <linearGradient id="gradGoldCyan" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -153,15 +151,15 @@
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-exotBlue transition-colors">
                         <i class="fa-solid fa-user"></i>
                     </div>
-                    <input class="w-full py-3.5 pl-12 pr-4 bg-white/50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-exotBlue focus:border-transparent focus:bg-white transition-all shadow-inner" id="username" type="text" placeholder="Username (admin)" required value="admin">
+                    <input class="w-full py-3.5 pl-12 pr-4 bg-white/50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-exotBlue focus:border-transparent focus:bg-white transition-all shadow-inner" id="username" type="text" placeholder="Username" required>
                 </div>
                 <div class="mb-8 relative group">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-exotBlue transition-colors">
                         <i class="fa-solid fa-lock"></i>
                     </div>
-                    <input class="w-full py-3.5 pl-12 pr-4 bg-white/50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-exotBlue focus:border-transparent focus:bg-white transition-all shadow-inner" id="password" type="password" placeholder="Password (admin123)" required value="admin123">
+                    <input class="w-full py-3.5 pl-12 pr-4 bg-white/50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-exotBlue focus:border-transparent focus:bg-white transition-all shadow-inner" id="password" type="password" placeholder="Password" required>
                 </div>
-                <button class="w-full bg-gradient-to-r from-exotBlue to-exotCyan hover:from-blue-700 hover:to-blue-500 text-white font-bold py-3.5 px-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all transform hover:-translate-y-1 shadow-lg shadow-exotBlue/40 flex justify-center items-center gap-2" type="submit">
+                <button id="btn-login" class="w-full bg-gradient-to-r from-exotBlue to-exotCyan hover:from-blue-700 hover:to-blue-500 text-white font-bold py-3.5 px-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all transform hover:-translate-y-1 shadow-lg shadow-exotBlue/40 flex justify-center items-center gap-2 disabled:opacity-70 disabled:hover:translate-y-0" type="submit">
                     <span>Masuk Panel</span>
                     <i class="fa-solid fa-arrow-right-to-bracket"></i>
                 </button>
@@ -187,7 +185,8 @@
                     </div>
                     <div class="flex items-center space-x-6">
                         <div class="text-right hidden md:block">
-                            <p class="text-sm font-bold text-slate-800">Administrator</p>
+                            <!-- Admin Name Element -->
+                            <p id="admin-name" class="text-sm font-bold text-slate-800">Administrator</p>
                             <p id="current-time" class="text-xs text-slate-500 font-medium"></p>
                         </div>
                         <div class="h-10 w-px bg-slate-200 hidden md:block"></div>
@@ -475,33 +474,78 @@
             }
         }
 
-        // Login
-        function handleLogin(e) {
+        // Login Handler dengan Fetch API
+        async function handleLogin(e) {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
+            const btn = document.getElementById('btn-login');
             const originalContent = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-xl"></i> Membuka Panel...';
             
-            setTimeout(() => {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-                document.getElementById('dash-bg').classList.remove('hidden');
-                btn.innerHTML = originalContent;
-                
-                Swal.fire({
-                    toast: true, position: 'top-end', icon: 'success',
-                    title: 'Autentikasi Berhasil', text: 'Sistem Terkoneksi ke Database Sheets',
-                    showConfirmButton: false, timer: 3000,
-                    customClass: { popup: 'rounded-xl shadow-xl border-l-4 border-emerald-500' }
+            const inputUsername = document.getElementById('username').value;
+            const inputPassword = document.getElementById('password').value;
+
+            // State Loading
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-xl"></i> Memeriksa...';
+            btn.disabled = true;
+            
+            try {
+                // Request Login ke Apps Script
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        action: 'login',
+                        username: inputUsername,
+                        password: inputPassword 
+                    })
                 });
 
-                initDashboard();
-                fetchData(); // Fetch pertama kali
-                
-                // Mulai Interval Polling setiap 5 Detik
-                fetchIntervalId = setInterval(fetchData, 5000); 
+                const result = await response.json();
 
-            }, 1200);
+                if (result.status === 'success') {
+                    // Update nama Admin dari database
+                    const adminNameText = result.data.nama_lengkap || 'Administrator';
+                    document.getElementById('admin-name').innerText = adminNameText;
+
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('main-app').classList.remove('hidden');
+                    document.getElementById('dash-bg').classList.remove('hidden');
+                    
+                    Swal.fire({
+                        toast: true, position: 'top-end', icon: 'success',
+                        title: 'Autentikasi Berhasil', text: `Selamat datang, ${adminNameText}`,
+                        showConfirmButton: false, timer: 3000,
+                        customClass: { popup: 'rounded-xl shadow-xl border-l-4 border-emerald-500' }
+                    });
+
+                    initDashboard();
+                    fetchData(); // Fetch pertama kali
+                    
+                    // Mulai Interval Polling setiap 5 Detik
+                    fetchIntervalId = setInterval(fetchData, 5000); 
+                } else {
+                    // Gagal Login (Salah Sandi)
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Login Gagal',
+                        text: result.message || 'Username atau Password salah!',
+                        confirmButtonColor: '#ef4444',
+                        customClass: { popup: 'rounded-2xl' }
+                    });
+                }
+            } catch (error) {
+                console.error('Login Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Koneksi Terputus',
+                    text: 'Gagal terhubung ke database. Pastikan internet aktif.',
+                    confirmButtonColor: '#ef4444',
+                    customClass: { popup: 'rounded-2xl' }
+                });
+            } finally {
+                // Kembalikan tombol ke semula
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
         }
 
         // Logout
@@ -509,6 +553,11 @@
             document.getElementById('login-screen').classList.remove('hidden');
             document.getElementById('main-app').classList.add('hidden');
             document.getElementById('dash-bg').classList.add('hidden');
+            
+            // Kosongkan form login
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+
             switchTab('home');
             
             // Hentikan Polling saat logout
