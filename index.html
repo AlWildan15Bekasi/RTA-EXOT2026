@@ -637,6 +637,14 @@
             return `<span class="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1 w-max mx-auto"><i class="fa-solid fa-kaaba"></i> Al-Qur'an</span>`;
         }
 
+        // Helper untuk memformat link WhatsApp otomatis
+        function getWaLinkHtml(phone) {
+            if (!phone || phone === '-' || phone.trim() === '') return '<div class="text-xs text-slate-400 mt-0.5">-</div>';
+            let formatted = phone.replace(/\D/g, ''); // Hapus semua karakter kecuali angka (seperti - atau spasi)
+            if (formatted.startsWith('0')) formatted = '62' + formatted.substring(1); // Ubah 0 awalan jadi 62
+            return `<a href="https://wa.me/${formatted}" target="_blank" class="text-xs text-emerald-500 hover:text-emerald-600 font-bold flex items-center gap-1 mt-0.5 transition-colors w-max"><i class="fa-brands fa-whatsapp text-sm"></i> ${phone}</a>`;
+        }
+
         function renderAbsentTable(absentList) {
             const tbody = document.getElementById('table-absent-body');
             tbody.innerHTML = '';
@@ -660,6 +668,7 @@
                             <div class="ml-4">
                                 <div class="text-sm font-bold text-slate-800 group-hover:text-exotBlue transition-colors">${teacher.name}</div>
                                 <div class="text-xs text-slate-500">${teacher.gender}</div>
+                                ${getWaLinkHtml(teacher.phone)}
                             </div>
                         </div>
                     </td>
@@ -715,7 +724,7 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-bold text-slate-800">${teacher.name}</div>
-                        <div class="text-xs text-slate-500">${teacher.phone}</div>
+                        ${getWaLinkHtml(teacher.phone)}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">${statusBadge}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">${getSubjectBadge(teacher.subject)}</td>
