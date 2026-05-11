@@ -429,6 +429,35 @@
                             rowStatus = row.Status_Kehadiran.toString().toLowerCase();
                         }
                         
+                        // FIX: Membuang format tahun 1899 yang dikirim oleh Google Sheets
+                        let rawTime = row.Jam_Scan;
+                        let timeStr = '--:--:--';
+                        if (rawTime) {
+                            let t = String(rawTime);
+                            if (t.includes('T')) {
+                                let m = t.match(/T(\d{2}:\d{2}:\d{2})/);
+                                if (m) timeStr = m[1];
+                            } else {
+                                timeStr = t;
+                            }
+                        }
+
+                        // Mengambil tanggal scan yang sah
+                        let rawDate = row.Tanggal_Scan;
+                        let dateStr = '';
+                        if (rawDate) {
+                            let dStr = String(rawDate);
+                            if (dStr.includes('T')) {
+                                let d = new Date(dStr);
+                                dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                            } else {
+                                dateStr = dStr;
+                            }
+                        }
+                        
+                        // Menggabungkan tanggal dan waktu untuk notifikasi Pop Up
+                        let fullTimeStr = dateStr ? `${dateStr} &bull; ${timeStr} WIB` : `${timeStr} WIB`;
+
                         return {
                             id: row.ID_Penguji || '-',
                             name: row.Nama_Penguji || '-',
@@ -438,7 +467,8 @@
                             branch: row.Asal_Cabang || '-',
                             phone: row.No_HP || '-',
                             status: rowStatus,
-                            time: row.Jam_Scan || '--:--:--',
+                            time: timeStr,
+                            fullTime: fullTimeStr,
                             isLate: row.Keterangan_Waktu === 'Terlambat'
                         };
                     });
@@ -637,12 +667,21 @@
             return `<span class="px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1 w-max mx-auto"><i class="fa-solid fa-kaaba"></i> Al-Qur'an</span>`;
         }
 
-        // Helper untuk memformat link WhatsApp otomatis
+        // FIX: Helper untuk memformat link WhatsApp otomatis
         function getWaLinkHtml(phone) {
-            if (!phone || phone === '-' || phone.trim() === '') return '<div class="text-xs text-slate-400 mt-0.5">-</div>';
-            let formatted = phone.replace(/\D/g, ''); // Hapus semua karakter kecuali angka (seperti - atau spasi)
-            if (formatted.startsWith('0')) formatted = '62' + formatted.substring(1); // Ubah 0 awalan jadi 62
-            return `<a href="https://wa.me/${formatted}" target="_blank" class="text-xs text-emerald-500 hover:text-emerald-600 font-bold flex items-center gap-1 mt-0.5 transition-colors w-max"><i class="fa-brands fa-whatsapp text-sm"></i> ${phone}</a>`;
+            // Memastikan data dikonversi ke String terlebih dahulu sebelum dibersihkan (replace)
+            if (!phone || phone === '-' || phone.toString().trim() === '') return '<div class="text-xs text-slate-400 mt-0.5">-</div>';
+            
+            let phoneStr = phone.toString().trim();
+            let formatted = phoneStr.replace(/\D/g, ''); // Hapus semua karakter kecuali angka
+            
+            if (formatted.startsWith('0')) {
+                formatted = '62' + formatted.substring(1); // Ubah 0 awalan jadi 62
+            } else if (formatted.startsWith('8')) {
+                formatted = '62' + formatted; // Antisipasi input '8123...' langsung ke '628123...'
+            }
+            
+            return `<a href="https://wa.me/${formatted}" target="_blank" class="text-xs text-emerald-500 hover:text-emerald-600 font-bold flex items-center gap-1 mt-0.5 transition-colors w-max"><i class="fa-brands fa-whatsapp text-sm"></i> ${phoneStr}</a>`;
         }
 
         function renderAbsentTable(absentList) {
@@ -845,11 +884,12 @@
                                     ${teacher.room}
                                 </div>
                             </div>
+                            <!-- Waktu Hadir Info -->
                             <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 shadow-inner group hover:bg-slate-100 transition">
                                 <div class="text-sm text-slate-500 font-bold mb-1 uppercase tracking-wider text-[10px]">Waktu Hadir</div>
-                                <div class="font-black text-slate-800 text-xl flex items-center gap-3 font-mono">
-                                    <div class="w-8 h-8 rounded-full bg-exotBlue/10 text-exotBlue flex items-center justify-center"><i class="fa-regular fa-clock"></i></div>
-                                    ${teacher.time}
+                                <div class="font-black text-slate-800 text-sm flex items-center gap-3 font-mono">
+                                    <div class="w-8 h-8 rounded-full bg-exotBlue/10 text-exotBlue flex items-center justify-center shrink-0"><i class="fa-regular fa-clock"></i></div>
+                                    <span>${teacher.fullTime}</span>
                                 </div>
                             </div>
                         </div>
