@@ -429,14 +429,21 @@
                             rowStatus = row.Status_Kehadiran.toString().toLowerCase();
                         }
                         
-                        // FIX: Membuang format tahun 1899 yang dikirim oleh Google Sheets
+                        // FIX: Membuang format tahun 1899 dan konversi UTC ke WIB
                         let rawTime = row.Jam_Scan;
                         let timeStr = '--:--:--';
                         if (rawTime) {
                             let t = String(rawTime);
                             if (t.includes('T')) {
-                                let m = t.match(/T(\d{2}:\d{2}:\d{2})/);
-                                if (m) timeStr = m[1];
+                                // Parse sebagai Date object, lalu ubah ke waktu Jakarta (WIB)
+                                let d = new Date(t);
+                                timeStr = d.toLocaleTimeString('id-ID', { 
+                                    timeZone: 'Asia/Jakarta', 
+                                    hour: '2-digit', 
+                                    minute: '2-digit', 
+                                    second: '2-digit',
+                                    hour12: false 
+                                }).replace(/\./g, ':'); // Pastikan formatnya pakai titik dua (:) bukan titik (.)
                             } else {
                                 timeStr = t;
                             }
@@ -449,7 +456,7 @@
                             let dStr = String(rawDate);
                             if (dStr.includes('T')) {
                                 let d = new Date(dStr);
-                                dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                                dateStr = d.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'long', year: 'numeric' });
                             } else {
                                 dateStr = dStr;
                             }
